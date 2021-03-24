@@ -1,6 +1,7 @@
 /* bootstrap.c -- h-encore bootstrap menu
  *
  * Copyright (C) 2019 TheFloW
+ * Mod 2021 Codiak
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
@@ -9,8 +10,8 @@
 #include <vitasdk.h>
 #include "pspdebug.h"
 
-#define WHITE 0xFFFFFFFF
-#define RED   0xFF0000FF
+#define RED       0xFF0000FF
+#define MAGENTA   0xFFFF00FF
 
 #define printf psvDebugScreenPrintf
 
@@ -22,16 +23,25 @@ INCLUDE_EXTERN_RESOURCE(taihen_skprx);
 INCLUDE_EXTERN_RESOURCE(henkaku_skprx);
 INCLUDE_EXTERN_RESOURCE(henkaku_suprx);
 
-const char taihen_config_recovery_header[] =
-  "# This file is used as an alternative if ux0:tai/config.txt is not found.\n";
+const char ur0_tai_path[] = "ur0:tai";
+const char taihen_skprx_path[] = "ur0:tai/taihen.skprx";
+const char henkaku_skprx_path[] = "ur0:tai/henkaku.skprx";
+const char henkaku_suprx_path[] = "ur0:tai/henkaku.suprx";
 
-const char taihen_config_header[] =
+char *continue_config_name;
+char *switch_config_msg;
+
+const char config_path[] = "ur0:tai/config.txt";
+const char portable_config_path[] = "ur0:tai/config_port.txt";
+const char dock_config_path[] = "ur0:tai/config_dock.txt";
+const char backup_config_path[] = "ur0:tai/config_bkup.txt";
+
+const char recovery_config[] =
   "# For users plugins, you must refresh taiHEN from HENkaku Settings for\n"
   "# changes to take place.\n"
-  "# For kernel plugins, you must reboot for changes to take place.\n";
-
-const char taihen_config[] =
+  "# For kernel plugins, you must reboot for changes to take place.\n"
   "*KERNEL\n"
+  "ur0:tai/storagemgr.skprx\n"
   "# henkaku.skprx is hard-coded to load and is not listed here\n"
   "*main\n"
   "# main is a special titleid for SceShell\n"
@@ -44,19 +54,21 @@ const char taihen_config[] =
   "ur0:tai/henkaku.suprx\n";
 
 enum Items {
-  EXIT,
-  INSTALL_HENKAKU,
-  DOWNLOAD_VITASHELL,
-  PERSONALIZE_SAVEDATA,
-  RESET_TAIHEN_CONFIG
+  CONTINUE,
+  SWITCH_MODE,
+  RECOVERY_MODE,
+  HENKAKU_CFW,
+  VITASHELL_APP,
+  NOTROPHY_MSG
 };
 
 const char *items[] = {
-  "Exit",
-  "Install HENkaku",
-  "Download VitaShell",
-  "Personalize savedata",
-  "Reset taiHEN config.txt"
+  "> Continue",
+  "> Switch Mode",
+  "> Recovery Mode",
+  ">> HENkaku CFW",
+  ">> VitaShell App",
+  ">> No Trophy Message"
 };
 
 #define N_ITEMS (sizeof(items) / sizeof(char *))
@@ -303,7 +315,8 @@ int download_vitashell() {
   char url[256];
   int res;
   int i;
-
+  
+  printf(" > Installing VitaShell...\n");
   init_net();
 
   remove("ux0:patch/VITASHELL");
@@ -338,44 +351,72 @@ int download_vitashell() {
 int install_henkaku() {
   int res;
 
-  sceIoMkdir("ur0:tai", 6);
+  printf(" > Installing HENkaku...\n");
+  sceIoMkdir(ur0_tai_path, 6);
 
-  res = write_file("ur0:tai/taihen.skprx", (void *)&_binary_res_taihen_skprx_start, (int)&_binary_res_taihen_skprx_size);
+  res = write_file(taihen_skprx_path, (void *)&_binary_res_taihen_skprx_start, (int)&_binary_res_taihen_skprx_size);
   if (res < 0)
     return res;
-  res = write_file("ur0:tai/henkaku.skprx", (void *)&_binary_res_henkaku_skprx_start, (int)&_binary_res_henkaku_skprx_size);
+  res = write_file(henkaku_skprx_path, (void *)&_binary_res_henkaku_skprx_start, (int)&_binary_res_henkaku_skprx_size);
   if (res < 0)
     return res;
-  res = write_file("ur0:tai/henkaku.suprx", (void *)&_binary_res_henkaku_suprx_start, (int)&_binary_res_henkaku_suprx_size);
+  res = write_file(henkaku_suprx_path, (void *)&_binary_res_henkaku_suprx_start, (int)&_binary_res_henkaku_suprx_size);
   if (res < 0)
     return res;
 
   return 0;
 }
 
-int write_taihen_config(const char *path, int recovery) {
+int write_config(const int switch_config) {
   int fd;
-
-  // write default config
-  sceIoRemove(path);
-  fd = sceIoOpen(path, SCE_O_TRUNC | SCE_O_CREAT | SCE_O_WRONLY, 6);
-  if (recovery) {
-    sceIoWrite(fd, taihen_config_recovery_header, sizeof(taihen_config_recovery_header) - 1);
+  sceIoMkdir(ur0_tai_path, 6);
+  
+  if (switch_config == 0) {
+    printf(" > Backing up Last Config...\n");
+	printf(" > Loading Recovery Config...\n");
+	
+	fd = sceIoRemove(backup_config_path);
+	fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
+    fd = sceIoRename(config_path, backup_config_path);
+    sceIoClose(fd);
+	
+	fd = sceIoOpen(config_path, SCE_O_TRUNC | SCE_O_CREAT | SCE_O_WRONLY, 6);
+    sceIoWrite(fd, recovery_config, sizeof(recovery_config) - 1);
+    sceIoClose(fd);
   }
-  sceIoWrite(fd, taihen_config_header, sizeof(taihen_config_header) - 1);
-  sceIoWrite(fd, taihen_config, sizeof(taihen_config) - 1);
-  sceIoClose(fd);
-
-  return 0;
-}
-
-int reset_taihen_config() {
-  sceIoMkdir("ux0:tai", 6);
-  sceIoMkdir("ur0:tai", 6);
-
-  write_taihen_config("ux0:tai/config.txt", 0);
-  write_taihen_config("ur0:tai/config.txt", 1);
-
+  else if (exists(portable_config_path)) {
+    printf(" > Switching to Portable Mode...\n");
+	
+	fd = sceIoRemove(dock_config_path);
+	fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
+    fd = sceIoRename(config_path, dock_config_path);
+    sceIoClose(fd);
+	
+	fd = sceIoOpen(portable_config_path, SCE_O_RDONLY, 6);
+    fd = sceIoRename(portable_config_path, config_path);
+    sceIoClose(fd);
+  }
+  else if (exists(dock_config_path)) {
+    printf(" > Switching to Dock Mode...\n");
+	
+	fd = sceIoRemove(portable_config_path);
+	fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
+    fd = sceIoRename(config_path, portable_config_path);
+    sceIoClose(fd);
+	
+	fd = sceIoOpen(dock_config_path, SCE_O_RDONLY, 6);
+    fd = sceIoRename(dock_config_path, config_path);
+    sceIoClose(fd);
+  }
+  else {
+    printf(" > Creating Dock Config...\n");
+	printf(" > Loading Last Config as Portable Config...\n");
+	
+	fd = sceIoOpen(dock_config_path, SCE_O_TRUNC | SCE_O_CREAT | SCE_O_WRONLY, 6);
+    sceIoWrite(fd, recovery_config, sizeof(recovery_config) - 1);
+    sceIoClose(fd);
+  }
+  
   return 0;
 }
 
@@ -383,7 +424,8 @@ int personalize_savedata(int syscall_id) {
   int res;
   int fd;
   uint64_t aid;
-
+  
+  printf(" > Personalising savedata...\n");
   res = call_syscall(sceKernelGetProcessId(), 0, 0, syscall_id + 4);
   if (res < 0 && res != 0x80800003)
     return res;
@@ -451,17 +493,22 @@ int print_menu(int sel) {
 
   psvDebugScreenSetXY(0, 0);
   psvDebugScreenSetTextColor(RED);
-  printf("\n h-encore bootstrap menu\n\n");
+  printf("\n Mod of h-encore-2 by Codiak\n");
+  printf(" ---------------------------\n\n");
+  
+  psvDebugScreenSetTextColor(MAGENTA);
+  printf(continue_config_name);
+  psvDebugScreenSetTextColor(RED);
+  printf(" > Exit\n");
+  printf(" >> Refresh\n\n");
 
   for (i = 0; i < N_ITEMS; i++) {
-    psvDebugScreenSetTextColor(sel == i ? RED : WHITE);
-    printf(" [%c] %s\n", sel == i ? '*' : ' ', items[i]);
+    psvDebugScreenSetTextColor(sel == i ? MAGENTA : RED);
+    printf(" [%c] %s\n", sel == i ? 'X' : ' ', items[i]);
   }
 
-  printf("\n");
-
   psvDebugScreenSetTextColor(RED);
-  printf("----------------------------\n\n");
+  printf("\n ---------------------------\n\n");
 
   return 0;
 }
@@ -491,6 +538,19 @@ int module_start(SceSize args, void *argp) {
 
   psvDebugScreenInit();
   psvDebugScreenClearLineDisable();
+  
+  if (exists(portable_config_path)) {
+	continue_config_name = " [DOCK MODE]\n";
+	switch_config_msg = " > Switch to Portable Config?\n";
+  }
+  else if (exists(dock_config_path)) {
+	continue_config_name = " [PORTABLE MODE]\n";
+	switch_config_msg = " > Switch to Dock Config?\n";
+  }
+  else {
+	continue_config_name = " [NO MODE]\n";
+	switch_config_msg = " > No mode defined. Load Last Config as Portable Config and create Dock Config to fill in?\n";
+  }
 
   sel = 0;
   print_menu(sel);
@@ -520,27 +580,61 @@ int module_start(SceSize args, void *argp) {
         (!enter_cross && pressed_buttons & SCE_CTRL_CIRCLE)) {
       psvDebugScreenSetTextColor(RED);
 
-      if (sel == EXIT) {
-        printf(" > Exiting...\n");
+      if (sel == CONTINUE) {
+        printf(" > Loading Last Config...\n");
         sceKernelDelayThread(500 * 1000);
         break;
-      } else if (sel == INSTALL_HENKAKU) {
-        printf(" > Installing HENkaku...\n");
-        sceKernelDelayThread(500 * 1000);
-        res = install_henkaku();
-      } else if (sel == DOWNLOAD_VITASHELL) {
-        printf(" > Downloading VitaShell...\n");
-        sceKernelDelayThread(500 * 1000);
-        res = download_vitashell();
-      } else if (sel == PERSONALIZE_SAVEDATA) {
-        printf(" > Personalizing savedata...\n");
-        sceKernelDelayThread(500 * 1000);
-        res = personalize_savedata(syscall_id);
-      } else if (sel == RESET_TAIHEN_CONFIG) {
-        if (wait_confirm(" > Are you sure you want to reset taiHEN config.txt?\n")) {
-          printf(" > Resetting taiHEN config.txt...\n");
+      }
+	  else if (sel == SWITCH_MODE) {
+        if (wait_confirm(switch_config_msg)) {
           sceKernelDelayThread(500 * 1000);
-          res = reset_taihen_config();
+          res = write_config(1);
+		  break;
+        } else {
+          sel = 0;
+          psvDebugScreenClear();
+          print_menu(sel);
+          continue;
+        }
+	  }
+	  else if (sel == RECOVERY_MODE) {
+        if (wait_confirm(" > Backup Last Config and Reset to Base Config with SD2VITA?\n")) {
+          sceKernelDelayThread(500 * 1000);
+          res = write_config(0);
+		  break;
+        } else {
+          sel = 0;
+          psvDebugScreenClear();
+          print_menu(sel);
+          continue;
+        }
+	  }
+	  else if (sel == HENKAKU_CFW) {
+        if (wait_confirm(" > Install the CFW framework?\n")) {
+          sceKernelDelayThread(500 * 1000);
+          res = install_henkaku();
+        } else {
+          sel = 0;
+          psvDebugScreenClear();
+          print_menu(sel);
+          continue;
+        }
+      }
+	  else if (sel == VITASHELL_APP) {
+        if (wait_confirm(" > Install the multi-functional file manager?\n")) {
+          sceKernelDelayThread(500 * 1000);
+          res = download_vitashell();
+        } else {
+          sel = 0;
+          psvDebugScreenClear();
+          print_menu(sel);
+          continue;
+        }
+      }
+	  else if (sel == NOTROPHY_MSG) {
+        if (wait_confirm(" > Personalise savedata to remove trophy message?\n")) {
+          sceKernelDelayThread(500 * 1000);
+          res = personalize_savedata(syscall_id);
         } else {
           sel = 0;
           psvDebugScreenClear();
@@ -562,21 +656,18 @@ int module_start(SceSize args, void *argp) {
   sceShellUtilUnlock(SCE_SHELL_UTIL_LOCK_TYPE_PS_BTN);
 
   // Install HENkaku if any of the modules are missing
-  if (!exists("ur0:tai/henkaku.suprx") ||
-      !exists("ur0:tai/henkaku.skprx") ||
-      !exists("ur0:tai/taihen.skprx")) {
-    printf(" > Installing HENkaku...\n");
+  if (!exists(henkaku_suprx_path) ||
+      !exists(henkaku_skprx_path) ||
+      !exists(taihen_skprx_path)) {
     sceKernelDelayThread(500 * 1000);
     res = install_henkaku();
     print_result(res);
   }
 
-  // Write taiHEN configs if both at ur0: and ux0: don't exist
-  if (!exists("ur0:tai/config.txt") &&
-      !exists("ux0:tai/config.txt")) {
-    printf(" > Writing taiHEN config.txt...\n");
+  // Write taiHEN configs if config.txt doesn't exist
+  if (!exists(config_path)) {
     sceKernelDelayThread(500 * 1000);
-    res = reset_taihen_config();
+    res = write_config(0);
     print_result(res);
   }
 
@@ -596,7 +687,7 @@ int module_start(SceSize args, void *argp) {
 
   if (res < 0 && res != 0x8002D013 && res != 0x8002D017) {
     printf(" > Failed to load HENkaku! 0x%08X\n", res);
-    printf(" > Please relaunch the exploit and select 'Install HENkaku'.\n");
+    printf(" > Please relaunch exploit and select 'HENkaku CFW'.\n");
     sceKernelDelayThread(5 * 1000 * 1000);
   }
 
