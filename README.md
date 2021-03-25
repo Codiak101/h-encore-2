@@ -2,7 +2,7 @@
 
 *h-encore²*, where *h* stands for hacks and homebrews, is the fourth public jailbreak for the *PS Vita™* which supports the newest firmwares 3.65-3.73. It allows you to make kernel- and user-modifications, change the clock speed, install plugins, run homebrews and much more.
 
-This Mod allows you to switch between 2 config.txt files for different sets of plugins - Portable and Dock. You can also backup your current config.txt and reset to the base config plus the SD2VITA plugin.
+This mod allows you to switch between 2 config.txt files for different sets of plugins - Portable and Dock. You can also backup your current config.txt and reset to the base config plus the SD2VITA plugin.
 
 ## Requirements
 
@@ -14,8 +14,7 @@ This Mod allows you to switch between 2 config.txt files for different sets of p
 
 1. Download the system.dat file from Releases.
 
-2. Transfer the file to your Vita with VitaShell:
-https://github.com/TheOfficialFloW/VitaShell/blob/master/README.md
+2. Transfer the file to your Vita with VitaShell - https://github.com/TheOfficialFloW/VitaShell/blob/master/README.md
 
 3. Copy the file and navigate to user/??/savedata on your active partition.
 
@@ -29,15 +28,20 @@ https://github.com/TheOfficialFloW/VitaShell/blob/master/README.md
 
 When first launching you'll see [NO MODE] where selecting Continue will use your current config.txt as normal and not set a mode. When switching mode your current config.txt will be taken as the Portable config and a new file called config_dock.txt is created. This is the Dock config with the base settings which you can now put your plugins in. When launching again you'll see [PORTABLE MODE] and switching mode will make your Dock config the current config and save your Portable config to config_port.txt. Relaunching shows [DOCK MODE] - you can now switch between the 2 modes.
 
-Menu:
-"> Continue" - Load the current mode
+Menu > selecting a mode exits the app >> selecting another action refreshes the app:
+
+"> Continue" - Load the current config
+
 "> Switch Mode" - Switch between Portable and Dock mode
+
 "> Recovery Mode" - Backup current config to config_bkup.txt and reset config.txt to the base config plus the SD2VITA plugin
+
 ">> HENkaku CFW" - Install HENkaku
+
 ">> VitaShell App" - Install VitaShell
+
 ">> No Trophy Message" - Personalise savedata which removes the trophy message when launching
 
 ## Credits
 
-Thanks to TheOfficialFloW for the original h-encore-2:
-https://github.com/TheOfficialFloW/h-encore-2/blob/master/README.md
+Thanks to TheOfficialFloW for the original h-encore-2 - https://github.com/TheOfficialFloW/h-encore-2/blob/master/README.md
