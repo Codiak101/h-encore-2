@@ -2,7 +2,9 @@
 
 *h-encore²*, where *h* stands for hacks and homebrews, is the fourth public jailbreak for the *PS Vita™* which supports the newest firmwares 3.65-3.73. It allows you to make kernel- and user-modifications, change the clock speed, install plugins, run homebrews and much more.
 
-This mod allows you to switch between 2 config.txt files for different sets of plugins - Portable and Dock. You can also backup your current config.txt and reset to the base config plus the SD2VITA plugin. This only works on the ur0 partition so make sure there's no config.txt in the ux0.
+This mod allows you to switch between 2 config.txt files for different sets of plugins - Portable and Dock. You can also backup your current config.txt and reset to the base config plus the SD2VITA plugin. This only works on the ur0 partition so make sure there's no config.txt in the ux0. Please install the original app first to then patch the mod:
+
+https://github.com/TheOfficialFloW/h-encore-2
 
 ## Requirements
 
@@ -15,7 +17,7 @@ This mod allows you to switch between 2 config.txt files for different sets of p
 
 1. Download the system.dat file from Releases.
 
-2. Transfer the file to your Vita with VitaShell - https://github.com/TheOfficialFloW/VitaShell/blob/master/README.md
+2. Transfer the file to your Vita with VitaShell - https://github.com/TheOfficialFloW/VitaShell
 
 3. Copy the file and navigate to user/??/savedata on your active partition.
 
@@ -45,4 +47,4 @@ Menu > selecting a mode exits the app >> selecting another action refreshes the 
 
 ## Credits
 
-Thanks to TheOfficialFloW for the original h-encore-2 - https://github.com/TheOfficialFloW/h-encore-2/blob/master/README.md
+Thanks to TheOfficialFloW for the original h-encore-2
