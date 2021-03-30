@@ -373,46 +373,46 @@ int write_config(const int switch_config) {
   
   if (switch_config == 0) {
     printf(" > Backing up Last Config...\n");
-	printf(" > Loading Recovery Config...\n");
-	
-	fd = sceIoRemove(backup_config_path);
-	fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
+    printf(" > Loading Recovery Config...\n");
+    
+    fd = sceIoRemove(backup_config_path);
+    fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
     fd = sceIoRename(config_path, backup_config_path);
     sceIoClose(fd);
-	
-	fd = sceIoOpen(config_path, SCE_O_TRUNC | SCE_O_CREAT | SCE_O_WRONLY, 6);
+    
+    fd = sceIoOpen(config_path, SCE_O_TRUNC | SCE_O_CREAT | SCE_O_WRONLY, 6);
     sceIoWrite(fd, recovery_config, sizeof(recovery_config) - 1);
     sceIoClose(fd);
   }
   else if (exists(portable_config_path)) {
     printf(" > Switching to Portable Mode...\n");
-	
-	fd = sceIoRemove(dock_config_path);
-	fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
+    
+    fd = sceIoRemove(dock_config_path);
+    fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
     fd = sceIoRename(config_path, dock_config_path);
     sceIoClose(fd);
-	
-	fd = sceIoOpen(portable_config_path, SCE_O_RDONLY, 6);
+    
+    fd = sceIoOpen(portable_config_path, SCE_O_RDONLY, 6);
     fd = sceIoRename(portable_config_path, config_path);
     sceIoClose(fd);
   }
   else if (exists(dock_config_path)) {
     printf(" > Switching to Dock Mode...\n");
-	
-	fd = sceIoRemove(portable_config_path);
-	fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
+    
+    fd = sceIoRemove(portable_config_path);
+    fd = sceIoOpen(config_path, SCE_O_RDONLY, 6);
     fd = sceIoRename(config_path, portable_config_path);
     sceIoClose(fd);
-	
-	fd = sceIoOpen(dock_config_path, SCE_O_RDONLY, 6);
+    
+    fd = sceIoOpen(dock_config_path, SCE_O_RDONLY, 6);
     fd = sceIoRename(dock_config_path, config_path);
     sceIoClose(fd);
   }
   else {
     printf(" > Creating Dock Config...\n");
-	printf(" > Loading Last Config as Portable Config...\n");
-	
-	fd = sceIoOpen(dock_config_path, SCE_O_TRUNC | SCE_O_CREAT | SCE_O_WRONLY, 6);
+    printf(" > Loading Last Config as Portable Config...\n");
+    
+    fd = sceIoOpen(dock_config_path, SCE_O_TRUNC | SCE_O_CREAT | SCE_O_WRONLY, 6);
     sceIoWrite(fd, recovery_config, sizeof(recovery_config) - 1);
     sceIoClose(fd);
   }
@@ -540,16 +540,16 @@ int module_start(SceSize args, void *argp) {
   psvDebugScreenClearLineDisable();
   
   if (exists(portable_config_path)) {
-	continue_config_name = " [DOCK MODE]\n";
-	switch_config_msg = " > Switch to Portable Config?\n";
+    continue_config_name = " [DOCK MODE]\n";
+    switch_config_msg = " > Switch to Portable Config?\n";
   }
   else if (exists(dock_config_path)) {
-	continue_config_name = " [PORTABLE MODE]\n";
-	switch_config_msg = " > Switch to Dock Config?\n";
+    continue_config_name = " [PORTABLE MODE]\n";
+    switch_config_msg = " > Switch to Dock Config?\n";
   }
   else {
-	continue_config_name = " [NO MODE]\n";
-	switch_config_msg = " > No mode defined. Load Last Config as Portable Config and create Dock Config to fill in?\n";
+    continue_config_name = " [NO MODE]\n";
+    switch_config_msg = " > No mode defined. Load Last Config as Portable Config and create Dock Config to fill in?\n";
   }
 
   sel = 0;
@@ -585,31 +585,31 @@ int module_start(SceSize args, void *argp) {
         sceKernelDelayThread(500 * 1000);
         break;
       }
-	  else if (sel == SWITCH_MODE) {
+      else if (sel == SWITCH_MODE) {
         if (wait_confirm(switch_config_msg)) {
           sceKernelDelayThread(500 * 1000);
           res = write_config(1);
-		  break;
+          break;
         } else {
           sel = 0;
           psvDebugScreenClear();
           print_menu(sel);
           continue;
         }
-	  }
-	  else if (sel == RECOVERY_MODE) {
+      }
+      else if (sel == RECOVERY_MODE) {
         if (wait_confirm(" > Backup Last Config and Reset to Base Config with SD2VITA?\n")) {
           sceKernelDelayThread(500 * 1000);
           res = write_config(0);
-		  break;
+          break;
         } else {
           sel = 0;
           psvDebugScreenClear();
           print_menu(sel);
           continue;
         }
-	  }
-	  else if (sel == HENKAKU_CFW) {
+      }
+      else if (sel == HENKAKU_CFW) {
         if (wait_confirm(" > Install the CFW framework?\n")) {
           sceKernelDelayThread(500 * 1000);
           res = install_henkaku();
@@ -620,7 +620,7 @@ int module_start(SceSize args, void *argp) {
           continue;
         }
       }
-	  else if (sel == VITASHELL_APP) {
+      else if (sel == VITASHELL_APP) {
         if (wait_confirm(" > Install the multi-functional file manager?\n")) {
           sceKernelDelayThread(500 * 1000);
           res = download_vitashell();
@@ -631,7 +631,7 @@ int module_start(SceSize args, void *argp) {
           continue;
         }
       }
-	  else if (sel == NOTROPHY_MSG) {
+      else if (sel == NOTROPHY_MSG) {
         if (wait_confirm(" > Personalise savedata to remove trophy message?\n")) {
           sceKernelDelayThread(500 * 1000);
           res = personalize_savedata(syscall_id);
